@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTB Market Analysis Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- TradingView Widget -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --primary: #0066b3;
+            --primary-dark: #004c8c;
+            --secondary: #00a0e9;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gradient: linear-gradient(135deg, #0066b3 0%, #00a0e9 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        /* Header */
+        .header {
+            background: var(--gradient);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logo-text p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Prompt', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-refresh {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            display: flex;
+            gap: 20px;
+            margin: 0 40px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .nav-menu {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin: 10px 0 0;
+                flex-wrap: wrap;
+            }
+        }
+
+        .btn-refresh:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-line {
+            background: #06c755;
+            color: white;
+        }
+
+        .btn-line:hover {
+            background: #05b34a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 199, 85, 0.4);
+        }
+
+        /* Main Content */
+        .main {
+            padding: 30px 40px;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .status-value.positive {
+            color: var(--success);
+        }
+
+        .status-value.negative {
+            color: var(--danger);
+        }
+
+        .status-value.neutral {
+            color: var(--warning);
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* Market Card */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .card-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-bullish {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .badge-bearish {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .badge-neutral {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .card-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .card-change {
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-change.positive {
+            color: var(--success);
+        }
+
+        .card-change.negative {
+            color: var(--danger);
+        }
+
+        .card-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .detail-item {
+            font-size: 0.85rem;
+        }
+
+        .detail-label {
+            opacity: 0.6;
+        }
+
+        /* Fund Section */
+        .fund-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .fund-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .fund-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .fund-category {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .fund-signal {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .signal-accumulate {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .signal-hold {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .signal-caution {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .signal-wait {
+            background: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+        }
+
+        .fund-list {
+            margin-top: 15px;
+        }
+
+        .fund-list-title {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-bottom: 8px;
+        }
+
+        .fund-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .fund-chip {
+            background: rgba(0, 102, 179, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* LINE Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .line-message {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-copy {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-send-line {
+            background: #06c755;
+            color: white;
+            flex: 1;
+        }
+
+        /* News Section */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .news-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .news-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--secondary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .news-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .news-category.global {
+            background: rgba(0, 160, 233, 0.2);
+            color: #00a0e9;
+        }
+
+        .news-category.thai {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .news-category.commodity {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .news-category.policy {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .news-title {
+            font-size: 1rem;
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .news-meta {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .category-header {
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin: 30px 0 15px 0;
+            padding-left: 10px;
+            border-left: 4px solid var(--secondary);
+            font-weight: 500;
+        }
+
+        /* GA Fund Cards */
+        .ga-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .ga-card {
+            background: linear-gradient(135deg, rgba(0, 102, 179, 0.2), rgba(0, 160, 233, 0.1));
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(0, 160, 233, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ga-card:hover {
+            transform: translateY(-5px);
+            border-color: #00a0e9;
+            box-shadow: 0 10px 30px rgba(0, 160, 233, 0.2);
+        }
+
+        .ga-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ga-card-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00a0e9;
+        }
+
+        .ga-card-signal {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .ga-card-signal.accumulate {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .ga-card-signal.hold {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .ga-card-signal.wait {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .ga-card-nav {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .ga-card-change {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .ga-card-date {
+            font-size: 0.75rem;
+            opacity: 0.6;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .status-bar {
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .fund-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">ttb</div>
+            <div class="logo-text">
+                <h1>Market Analysis Dashboard</h1>
+                <p>ระบบวิเคราะห์ตลาดประจำวัน</p>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="#section-market" class="nav-link">📊 ข้อมูลตลาด</a>
+            <a href="#section-funds" class="nav-link">💼 กองทุนแนะนำ</a>
+            <a href="#section-news" class="nav-link">📰 ข่าววันนี้</a>
+        </nav>
+        <div class="header-actions">
+            <button class="btn btn-refresh" onclick="refreshData()">
+                🔄 อัปเดตข้อมูล
+            </button>
+            <button class="btn btn-line" onclick="openLineModal()">
+                📱 ส่ง LINE
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">อัปเดตล่าสุด</div>
+                <div class="status-value" id="lastUpdate">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">ราคาปิดวันที่</div>
+                <div class="status-value" id="dataDate" style="color:#00a0e9;">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">ภาพรวมตลาด</div>
+                <div class="status-value" id="marketSentiment">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">สินทรัพย์ขาขึ้น</div>
+                <div class="status-value positive" id="bullishCount">-</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">สินทรัพย์ขาลง</div>
+                <div class="status-value negative" id="bearishCount">-</div>
+            </div>
+        </div>
+
+        <!-- Market Data Section -->
+        <!-- Market Data Section -->
+        <h2 class="section-title" id="section-market">📊 ข้อมูลตลาด</h2>
+        <div class="grid" id="marketGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+        </div>
+
+        <!-- Fund Signals Section -->
+        <!-- Fund Signals Section -->
+        <h2 class="section-title" id="section-funds">💼 สัญญาณกองทุน TTB</h2>
+        <div id="fundGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>กำลังวิเคราะห์กองทุน...</p>
+            </div>
+        </div>
+
+        <!-- ES-ULTIMATE GA Series Section -->
+        <h2 class="section-title">🏆 ES-ULTIMATE GA Series</h2>
+        <div class="ga-grid" id="gaGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>กำลังโหลดข้อมูล GA...</p>
+            </div>
+        </div>
+
+        <!-- News Section -->
+        <!-- News Section -->
+        <h2 class="section-title" id="section-news">📰 ข่าวการลงทุนวันนี้</h2>
+        <div class="news-grid" id="newsGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>กำลังโหลดข่าว...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- LINE Modal -->
+    <div class="modal" id="lineModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">📱 ข้อความสำหรับส่ง LINE</h3>
+                <button class="modal-close" onclick="closeLineModal()">×</button>
+            </div>
+            <div class="line-message" id="lineMessage">กำลังสร้างข้อความ...</div>
+            <div class="modal-actions">
+                <button class="btn" style="background:#FF6B6B; color:white;" onclick="sendLineNotify()">🚀 ส่ง LINE
+                    ทันที</button>
+                <button class="btn btn-copy" onclick="copyMessage()">📋 คัดลอก</button>
+                <button class="btn btn-send-line" onclick="sendToLineApp()">💻 PC App</button>
+                <button class="btn btn-send-line" style="background:#00B900;" onclick="sendToLine()">📱 Web</button>
+            </div>
+            <div id="lineNotifyStatus" style="margin-top:10px; text-align:center; display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Chart Modal with TradingView Widget -->
+    <div class="modal" id="chartModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="chartTitle">📈 กราฟราคา</h3>
+                <button class="modal-close" onclick="closeChartModal()">×</button>
+            </div>
+            <div id="chartInfo"
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                <div>
+                    <span id="chartPrice" style="font-size:1.5rem; font-weight:600;">-</span>
+                    <span id="chartChange" style="margin-left:10px;">-</span>
+                </div>
+                <div style="font-size:0.85rem; opacity:0.7;">
+                    Powered by TradingView
+                </div>
+            </div>
+            <!-- TradingView Widget Container -->
+            <div id="tradingview_widget_container"
+                style="background:#131722; border-radius:15px; overflow:hidden; height:500px;"></div>
+        </div>
+    </div>
+
+    <style>
+        .period-btn,
+        .chart-type-btn {
+            padding: 6px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Prompt', sans-serif;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+
+        .period-btn:hover,
+        .chart-type-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .period-btn.active,
+        .chart-type-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+    </style>
+
+    <script>
+        let lineUrl = '';
+        let lineAppUrl = '';
+        let priceChart = null;
+
+        async function refreshData() {
+            await Promise.all([loadMarketData(), loadFundSignals(), loadGAFunds(), loadNews()]);
+        }
+
+        async function loadGAFunds() {
+            const grid = document.getElementById('gaGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล GA...</p></div>';
+
+            try {
+                const response = await fetch('/api/ga-funds');
+                const result = await response.json();
+
+                let html = '';
+                result.forEach(fund => {
+                    const changeClass = fund.nav_change >= 0 ? 'positive' : 'negative';
+                    const arrow = fund.nav_change >= 0 ? '▲' : '▼';
+
+                    html += `
+                        <div class="ga-card" onclick="openChart('${fund.name}')" title="คลิกเพื่อดูกราฟ">
+                            <div class="ga-card-header">
+                                <div class="ga-card-name">${fund.name}</div>
+                                <span class="ga-card-signal ${fund.signal_class}">${fund.signal}</span>
+                            </div>
+                            <div class="ga-card-nav" style="color: ${fund.nav_change >= 0 ? '#28a745' : '#dc3545'}">${fund.nav.toFixed(4)}</div>
+                            <div class="ga-card-change ${changeClass}" style="color: ${fund.nav_change >= 0 ? '#28a745' : '#dc3545'}">
+                                ${arrow} ${fund.nav_change >= 0 ? '+' : ''}${fund.nav_change}%
+                            </div>
+                            <div class="ga-card-date">อัปเดต: ${fund.update_date}</div>
+                        </div>
+                    `;
+                });
+
+                grid.innerHTML = html;
+
+            } catch (error) {
+                grid.innerHTML = '<p style="text-align:center;">เกิดข้อผิดพลาดในการโหลดข้อมูล GA</p>';
+            }
+        }
+
+        async function loadNews() {
+            const grid = document.getElementById('newsGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>กำลังโหลดข่าว...</p></div>';
+
+            try {
+                const response = await fetch('/api/news');
+                const result = await response.json();
+
+                if (result.news.length === 0) {
+                    grid.innerHTML = '<p style="text-align:center; opacity:0.6;">ไม่พบข่าวในขณะนี้</p>';
+                    return;
+                }
+
+                let html = '';
+
+                result.news.forEach(item => {
+                    const categoryClass = item.category.includes('โลก') ? 'global' :
+                        item.category.includes('ไทย') ? 'thai' :
+                            item.category.includes('โภค') ? 'commodity' : 'policy';
+
+                    html += `
+                        <a href="${item.link}" target="_blank" class="news-card">
+                            <span class="news-category ${categoryClass}">${item.category}</span>
+                            <div class="news-title">${item.title}</div>
+                            <div class="news-meta">
+                                <span>${item.source}</span>
+                                <span>${item.date}</span>
+                            </div>
+                        </a>
+                    `;
+                });
+
+                grid.innerHTML = html;
+
+            } catch (error) {
+                grid.innerHTML = '<p style="text-align:center;">เกิดข้อผิดพลาดในการโหลดข่าว</p>';
+            }
+        }
+
+        async function loadMarketData() {
+            const grid = document.getElementById('marketGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>กำลังโหลดข้อมูล...</p></div>';
+
+            try {
+                const response = await fetch('/api/market-data');
+                const result = await response.json();
+
+                document.getElementById('lastUpdate').textContent = result.timestamp;
+                document.getElementById('dataDate').textContent = result.data_date || result.timestamp.split(' ')[0];
+
+                let bullish = 0, bearish = 0;
+                let html = '';
+
+                result.data.forEach(item => {
+                    if (item.change_pct > 0) bullish++;
+                    else if (item.change_pct < 0) bearish++;
+
+                    const changeClass = item.change_pct > 0 ? 'positive' : item.change_pct < 0 ? 'negative' : '';
+                    const arrow = item.change_pct > 0 ? '▲' : item.change_pct < 0 ? '▼' : '●';
+
+                    html += `
+                        <div class="card" onclick="openChart('${item.name}')" style="cursor:pointer;" title="คลิกเพื่อดูกราฟ">
+                            <div class="card-header">
+                                <div class="card-title">${item.name}</div>
+                                <span class="card-badge badge-${item.trend_class}">${item.trend}</span>
+                            </div>
+                            <div class="card-price" style="color: ${item.change_pct >= 0 ? '#28a745' : '#dc3545'}">${item.price.toLocaleString()}</div>
+                            <div class="card-change ${changeClass}" style="color: ${item.change_pct >= 0 ? '#28a745' : '#dc3545'}">
+                                ${arrow} ${item.change_pct > 0 ? '+' : ''}${item.change_pct}%
+                            </div>
+                            <div class="card-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">โมเมนตัม:</span>
+                                    <div>${item.momentum}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">สัญญาณ:</span>
+                                    <div>${item.signal}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                grid.innerHTML = html;
+                document.getElementById('bullishCount').textContent = bullish;
+                document.getElementById('bearishCount').textContent = bearish;
+
+                const sentiment = bullish > bearish * 1.5 ? '🟢 บวก' : bearish > bullish * 1.5 ? '🔴 ลบ' : '🟡 ผสม';
+                document.getElementById('marketSentiment').textContent = sentiment;
+
+            } catch (error) {
+                grid.innerHTML = '<p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
+            }
+        }
+
+        async function loadFundSignals() {
+            const grid = document.getElementById('fundGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div><p>กำลังวิเคราะห์กองทุน...</p></div>';
+
+            try {
+                const response = await fetch('/api/fund-signals');
+                const result = await response.json();
+
+                const fundsByCategory = {};
+
+                result.forEach(fund => {
+                    if (!fundsByCategory[fund.category]) {
+                        fundsByCategory[fund.category] = [];
+                    }
+                    fundsByCategory[fund.category].push(fund);
+                });
+
+                let html = '';
+
+                // Order of categories
+                const categoryOrder = [
+                    "หุ้นสหรัฐ", "หุ้นจีน/ช่องกง", "หุ้นเอเชีย", "หุ้นอินเดีย",
+                    "หุ้นญี่ปุ่น", "หุ้นยุโรป", "หุ้นโลก", "ทองคำ", "ตราสารหนี้ต่างประเทศ"
+                ];
+
+                // Iterate through known order, then others
+                const categories = Object.keys(fundsByCategory);
+                const sortedCategories = [
+                    ...categoryOrder.filter(c => categories.includes(c)),
+                    ...categories.filter(c => !categoryOrder.includes(c))
+                ];
+
+                sortedCategories.forEach(category => {
+                    const funds = fundsByCategory[category];
+
+                    html += `<h3 class="category-header">${category}</h3>`;
+                    html += `<div class="ga-grid">`;
+
+                    funds.forEach(fund => {
+                        const changeClass = fund.change_pct >= 0 ? 'positive' : 'negative';
+                        const arrow = fund.change_pct >= 0 ? '▲' : '▼';
+
+                        const signalClass = fund.signal_class === 'accumulate' ? 'accumulate' :
+                            fund.signal_class === 'hold' ? 'hold' : 'wait';
+
+                        html += `
+                            <div class="ga-card" onclick="openChart('${fund.name}')" title="คลิกเพื่อดูกราฟ">
+                                <div class="ga-card-header">
+                                    <div class="ga-card-name">${fund.name}</div>
+                                    <span class="ga-card-signal ${signalClass}">${fund.signal}</span>
+                                </div>
+                                <div class="ga-card-nav" style="color: ${fund.change_pct >= 0 ? '#28a745' : '#dc3545'}">${fund.nav ? fund.nav.toFixed(4) : '-'}</div>
+                                <div class="ga-card-change ${changeClass}" style="color: ${fund.change_pct >= 0 ? '#28a745' : '#dc3545'}">
+                                    ${arrow} ${fund.change_pct > 0 ? '+' : ''}${fund.change_pct}%
+                                </div>
+                                <div class="ga-card-date">อัปเดต: ${fund.updated}</div>
+                            </div>
+                        `;
+                    });
+
+                    html += `</div>`; // Close grid
+                });
+
+                grid.innerHTML = html;
+
+            } catch (error) {
+                grid.innerHTML = '<p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>';
+            }
+        }
+
+        async function openLineModal() {
+            document.getElementById('lineModal').classList.add('active');
+            document.getElementById('lineMessage').textContent = 'กำลังสร้างข้อความ...';
+
+            try {
+                const response = await fetch('/api/line-message');
+                const result = await response.json();
+                document.getElementById('lineMessage').textContent = result.message;
+                lineUrl = result.line_url;
+                lineAppUrl = result.line_app_url;
+            } catch (error) {
+                document.getElementById('lineMessage').textContent = 'เกิดข้อผิดพลาด';
+            }
+        }
+
+        function closeLineModal() {
+            document.getElementById('lineModal').classList.remove('active');
+        }
+
+        function copyMessage() {
+            const message = document.getElementById('lineMessage').textContent;
+            navigator.clipboard.writeText(message).then(() => {
+                alert('คัดลอกข้อความแล้ว!');
+            });
+        }
+
+        function sendToLine() {
+            if (lineUrl) {
+                window.open(lineUrl, '_blank');
+            } else {
+                alert('กำลังสร้างลิงก์ LINE... กรุณารอสักครู่แล้วกดใหม่');
+            }
+        }
+
+        function sendToLineApp() {
+            if (lineAppUrl) {
+                // Workflow: Copy Full Message -> Open LINE App -> User Pastes
+                const message = document.getElementById('lineMessage').textContent;
+
+                // Copy to clipboard
+                navigator.clipboard.writeText(message).then(() => {
+                    // Alert user and Open App
+                    alert('✅ คัดลอกข้อความเต็มแล้ว!\n\nเมื่อเปิดแอป LINE ให้เลือกแชทแล้วกด "วาง" (Ctrl+V) ได้เลยครับ');
+                    window.open(lineAppUrl, '_self');
+                }).catch(err => {
+                    alert('ไม่สามารถคัดลอกข้อความได้ กรุณากดปุ่ม "คัดลอก" ด้วยตนเอง');
+                    window.open(lineAppUrl, '_self');
+                });
+            } else {
+                alert('กำลังสร้างลิงก์สำหรับแอป... กรุณารอสักครู่แล้วกดใหม่');
+            }
+        }
+
+        async function sendLineNotify() {
+            const statusDiv = document.getElementById('lineNotifyStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<span style="color:#ffc107;">⏳ กำลังส่ง LINE...</span>';
+
+            try {
+                const response = await fetch('/api/send-line-notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    statusDiv.innerHTML = '<span style="color:#28a745;">✅ ส่ง LINE สำเร็จ!</span>';
+                    setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+                } else {
+                    statusDiv.innerHTML = '<span style="color:#dc3545;">❌ ' + (result.error || 'เกิดข้อผิดพลาด') + '</span>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<span style="color:#dc3545;">❌ เกิดข้อผิดพลาด: ' + error.message + '</span>';
+            }
+        }
+
+        // Chart functions - Finnomena iframe
+        let currentTicker = '';
+
+        // Finnomena fund URLs
+        const FINNOMENA_FUNDS = {
+            // ES-ULTIMATE GA Series
+            'ES-ULTIMATE GA1': { finnomena_page: 'https://www.finnomena.com/fund/ES-ULTIMATE%20GA1' },
+            'ES-ULTIMATE GA2': { finnomena_page: 'https://www.finnomena.com/fund/ES-ULTIMATE%20GA2' },
+            'ES-ULTIMATE GA3': { finnomena_page: 'https://www.finnomena.com/fund/ES-ULTIMATE%20GA3' },
+
+            // US Equity
+            'ES-USTECH': { finnomena_page: 'https://www.finnomena.com/fund/ES-USTECH' },
+            'ES-GTECH': { finnomena_page: 'https://www.finnomena.com/fund/ES-GTECH' },
+            'ES-USBLUECHIP': { finnomena_page: 'https://www.finnomena.com/fund/ES-USBLUECHIP' },
+            'SCBSEMI(A)': { finnomena_page: 'https://www.finnomena.com/fund/SCBSEMI%28A%29' },
+            'SCBUSAA': { finnomena_page: 'https://www.finnomena.com/fund/SCBUSAA' },
+
+            // China & Asia Equity
+            'KF-HSHARE-INDX': { finnomena_page: 'https://www.finnomena.com/fund/KF-HSHARE-INDX' },
+            'ES-CHINA-A': { finnomena_page: 'https://www.finnomena.com/fund/ES-CHINA-A' },
+            'SCBCHRA': { finnomena_page: 'https://www.finnomena.com/fund/SCBCHRA' },
+            'ES-JPNAE-A': { finnomena_page: 'https://www.finnomena.com/fund/ES-JPNAE-A' },
+            'ES-ASIA-A': { finnomena_page: 'https://www.finnomena.com/fund/ES-ASIA-A' },
+            'TISCOHD-A': { finnomena_page: 'https://www.finnomena.com/fund/TISCOHD-A' },
+            'ES-INDAE': { finnomena_page: 'https://www.finnomena.com/fund/ES-INDAE' },
+
+            // Europe & Global Equity
+            'ES-GER': { finnomena_page: 'https://www.finnomena.com/fund/ES-GER' },
+            'ONE-EUROEQ': { finnomena_page: 'https://www.finnomena.com/fund/ONE-EUROEQ' },
+            'ES-GF-A': { finnomena_page: 'https://www.finnomena.com/fund/ES-GF-A' },
+            'ES-GCORE': { finnomena_page: 'https://www.finnomena.com/fund/ES-GCORE' },
+            'ES-GDIV': { finnomena_page: 'https://www.finnomena.com/fund/ES-GDIV' },
+            'ES-PREMIUMBRAND': { finnomena_page: 'https://www.finnomena.com/fund/ES-PREMIUMBRAND' },
+
+            // Commodities & Bonds
+            'กองทุนทองคำ': { finnomena_page: 'https://www.finnomena.com/fund/ES-GOLD' },
+            'ES-GINCOME': { finnomena_page: 'https://www.finnomena.com/fund/ES-GINCOME' },
+            'KT-CSBOND-A': { finnomena_page: 'https://www.finnomena.com/fund/KT-CSBOND-A' },
+            'ES-GSBOND-A': { finnomena_page: 'https://www.finnomena.com/fund/ES-GSBOND-A' },
+
+            // Other funds if any
+            'ES-GOVCP': { finnomena_page: 'https://www.finnomena.com/fund/ES-GOVCP' },
+            'TTB-DK-RMF': { finnomena_page: 'https://www.finnomena.com/fund/TTB-DK-RMF' },
+            'ES-GF': { finnomena_page: 'https://www.finnomena.com/fund/ES-GF' },
+            'ES-SET50': { finnomena_page: 'https://www.finnomena.com/fund/ES-SET50' },
+            'ONE-UGG-RA': { finnomena_page: 'https://www.finnomena.com/fund/ONE-UGG-RA' }
+        };
+
+        // TradingView symbol mapping - for direct URL (ALL tickers)
+        const TV_URLS = {
+            // Market Data
+            'S&P 500': 'https://www.tradingview.com/chart/?symbol=SP%3ASPX',
+            'Nasdaq': 'https://www.tradingview.com/chart/?symbol=NASDAQ%3ANDX',
+            'Stoxx 600': 'https://www.tradingview.com/chart/?symbol=TVC%3ASXXP',
+            'Nikkei 225': 'https://www.tradingview.com/chart/?symbol=TVC%3ANI225',
+            'Shanghai': 'https://www.tradingview.com/chart/?symbol=SSE%3A000001',
+            'Hang Seng': 'https://www.tradingview.com/chart/?symbol=HSI%3AHSI',
+            'SET': 'https://www.tradingview.com/chart/?symbol=SET%3ASET',
+            'SET Index': 'https://www.tradingview.com/chart/?symbol=SET%3ASET',
+            'India BSE': 'https://www.tradingview.com/chart/?symbol=BSE%3ASENSEX',
+            'Gold': 'https://www.tradingview.com/chart/?symbol=TVC%3AGOLD',
+            'Oil WTI': 'https://www.tradingview.com/chart/?symbol=TVC%3AUSOIL',
+            'DXY': 'https://www.tradingview.com/chart/?symbol=TVC%3ADXY',
+            'DXY': 'https://www.tradingview.com/chart/?symbol=TVC%3ADXY',
+            'US 10Y': 'https://www.tradingview.com/chart/?symbol=TVC%3AUS10Y',
+            'USD/THB': 'https://www.tradingview.com/chart/?symbol=FX_IDC%3AUSDTHB',
+            // Fund Categories (Thai)
+            'หุ้นสหรัฐ': 'https://www.tradingview.com/chart/?symbol=SP%3ASPX',
+            'ทองคำ': 'https://www.tradingview.com/chart/?symbol=TVC%3AGOLD',
+            'หุ้นไทย': 'https://www.tradingview.com/chart/?symbol=SET%3ASET',
+            'หุ้นโลก (MSCI)': 'https://www.tradingview.com/chart/?symbol=AMEX%3AACWI',
+            'ตราสารหนี้ต่างประเทศ': 'https://www.tradingview.com/chart/?symbol=TVC%3AUS10Y'
+        };
+
+        async function openChart(tickerName) {
+            // Check if it's a Finnomena fund
+            if (FINNOMENA_FUNDS[tickerName]) {
+                const fund = FINNOMENA_FUNDS[tickerName];
+                window.open(fund.finnomena_page + '/graph', '_blank');
+                return;
+            }
+
+            // For TradingView assets - open TradingView.com directly
+            const tvUrl = TV_URLS[tickerName] || 'https://www.tradingview.com/chart/?symbol=SP%3ASPX';
+            window.open(tvUrl, '_blank');
+        }
+
+        function closeChartModal() {
+            document.getElementById('chartModal').classList.remove('active');
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', refreshData);
+    </script>
+</body>
+
+</html>
